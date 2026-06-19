@@ -38,7 +38,14 @@ export default function Site() {
   const settings = content.settings;
   const products = content.products.slice(0, 4);
 
-  useEffect(() => { publicApi.content().then(setContent).catch(() => setStatus('API bağlantısı kurulamadı; demo içerik gösteriliyor.')); }, []);
+  useEffect(() => {
+    publicApi.content()
+      .then((data) => {
+        if (!data?.settings || !Array.isArray(data.products)) throw new Error('Geçersiz API içeriği.');
+        setContent(data);
+      })
+      .catch(() => setStatus('API bağlantısı kurulamadı; demo içerik gösteriliyor.'));
+  }, []);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });

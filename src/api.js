@@ -4,6 +4,10 @@ const request = async (url, options = {}) => {
     headers: { 'Content-Type': 'application/json', ...options.headers }
   });
   if (response.status === 204) return null;
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error('Backend API yanıt vermiyor. Sunucu statik modda çalışıyor olabilir.');
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || 'İşlem tamamlanamadı.');
   return data;
