@@ -2,7 +2,7 @@
 
 Premium ofis mobilyaları sitesi ve yönetim panelinden oluşan full-stack proje.
 
-Node.js 22.5 veya üzeri gerektirir; önerilen sürüm Node.js 24 LTS'tir.
+Node.js 24 LTS kullanır. Sürüm `package.json`, `.nvmrc` ve `nixpacks.toml` içinde sabitlenmiştir.
 
 ## Teknoloji
 
@@ -46,3 +46,29 @@ npm.cmd start
 ```
 
 Production sunucusu derlenmiş React uygulamasını ve API'yi aynı porttan sunar.
+
+## Coolify + Nixpacks
+
+Proje kökündeki `nixpacks.toml` aşağıdaki akışı otomatik uygular:
+
+1. Node.js 24 ortamını hazırlar.
+2. `npm ci` ile paketleri kurar.
+3. `npm run build` ile React uygulamasını derler.
+4. `npm run start` ile Express sunucusunu başlatır.
+
+Coolify ayarları:
+
+- Build Pack: `Nixpacks`
+- Health Check Path: `/api/health`
+- Container Port: `3001` veya Coolify'ın verdiği `$PORT`
+- Persistent Storage hedefi: `/app/data`
+
+Canlı ortam değişkenleri:
+
+```text
+AUTH_SECRET=uzun-rastgele-en-az-32-karakter-bir-deger
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=guclu-bir-sifre
+```
+
+`DATA_DIR=/app/data` Nixpacks yapılandırmasında hazırdır. Coolify'da `/app/data` hedefine bir persistent volume bağlanmazsa uygulama çalışır ancak SQLite verileri yeni deploy sırasında korunmayabilir.

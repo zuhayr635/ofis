@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ["nodejs_24"]
+
+[phases.install]
+dependsOn = ["setup"]
+cmds = ["npm ci"]
+
+[phases.build]
+dependsOn = ["install"]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"
+
+[variables]
+NODE_ENV = "production"
+DATA_DIR = "/app/data"

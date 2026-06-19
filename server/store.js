@@ -4,9 +4,11 @@ import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
-const dataDirectory = path.join(directory, 'data');
+const dataDirectory = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(directory, 'data');
 const databaseFile = path.join(dataDirectory, 'baskent-class.sqlite');
-const legacyJsonFile = path.join(dataDirectory, 'db.json');
+const legacyJsonFile = path.join(directory, 'data', 'db.json');
 
 export const defaultSettings = {
   companyName: 'BAŞKENT CLASS',
@@ -128,6 +130,19 @@ export function resetStore() {
   const data = { ...initialData(), inquiries };
   writeStore(data);
   return data;
+}
+
+export function checkDatabase() {
+  try {
+    return database.prepare('SELECT 1 AS ok').get().ok === 1;
+  } catch {
+    return false;
+  }
+}
+
+export function closeStore() {
+  try { database.close(); }
+  catch { /* Veritabanı zaten kapanmış olabilir. */ }
 }
 
 function initializeDatabase() {

@@ -3,18 +3,27 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createToken, requireAuth, verifyCredentials } from './auth.js';
-import { defaultSettings, readStore, resetStore, updateStore } from './store.js';
+import { checkDatabase, closeStore, defaultSettings, readStore, resetStore, updateStore } from './store.js';
 
 const app = express();
 const port = Number(process.env.PORT) || 3001;
+const host = process.env.HOST || '0.0.0.0';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 app.disable('x-powered-by');
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '100kb' }));
 
 const clean = (value, max = 300) => String(value ?? '').trim().slice(0, max);
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'Başkent Class API' }));
+app.get('/api/health', (_req, res) => {
+  const databaseOk = checkDatabase();
+  res.status(databaseOk ? 200 : 503).json({
+    ok: databaseOk,
+    service: 'Başkent Class API',
+    database: databaseOk ? 'sqlite:ready' : 'sqlite:error'
+  });
+});
 
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body ?? {};
@@ -132,4 +141,21 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: 'Beklenmeyen bir sunucu hatası oluştu.' });
 });
 
-app.listen(port, () => console.log(`Başkent Class API http://localhost:${port} adresinde çalışıyor.`));
+const httpServer = app.listen(port, host, () => {
+  console.log(`Başkent Class API http://${host}:${port} adresinde çalışıyor.`);
+});
+
+let shuttingDown = false;
+const shutdown = (signal) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`${signal} alındı, sunucu güvenli biçimde kapatılıyor.`);
+  httpServer.close(() => {
+    closeStore();
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10_000).unref();
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
