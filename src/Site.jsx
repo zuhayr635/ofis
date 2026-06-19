@@ -35,8 +35,8 @@ export default function Site() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [status, setStatus] = useState('');
-  const settings = content.settings;
-  const products = content.products.slice(0, 4);
+  const settings = { ...defaults.settings, ...(content?.settings || {}) };
+  const products = (Array.isArray(content?.products) ? content.products : defaults.products).slice(0, 4);
 
   useEffect(() => {
     publicApi.content()
